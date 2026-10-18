@@ -211,7 +211,19 @@
   #ansicht-wetter.aktiv {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    height: 100%;
+  }
+
+  /* Die Wetteransicht nutzt den ganzen Bildschirm: eine Kopfzeile, dann die
+     grosse Haupttemperatur, dann zwei Kachelreihen - alles mit vh-basierten
+     Schriftgrössen, damit es auf jedem Bildschirmformat maximal gross und
+     von weitem lesbar bleibt. */
+  .wetter-full {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    gap: 3vh;
   }
 
   .wetter-kopf {
@@ -220,46 +232,91 @@
     justify-content: space-between;
     border-bottom: 2px solid #3a2600;
     padding-bottom: 10px;
+    flex: none;
   }
 
   .wetter-kopf h2 {
-    font-size: 1.1em;
+    font-size: clamp(1em, 3.2vh, 1.7em);
     font-weight: 600;
     color: #b37a00;
     margin: 0;
     text-transform: uppercase;
   }
 
-  .wetter-hauptwert {
+  .wetter-haupt {
+    flex: 1.4;
     display: flex;
-    align-items: baseline;
-    gap: 20px;
-    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 3vw;
+    min-height: 0;
+  }
+
+  .wetter-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: clamp(3.2em, 19vh, 8.5em);
+    color: #ffb000;
+  }
+
+  .wetter-icon svg {
+    width: 1em;
+    height: 1em;
+    display: block;
   }
 
   .wetter-temperatur {
-    font-size: clamp(2.2em, 9vw, 4.5em);
+    font-size: clamp(5em, 27vh, 12em);
     font-weight: 700;
+    line-height: 1;
   }
 
-  .wetter-details {
+  .wetter-reihe {
+    flex: 1;
     display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
-    font-size: clamp(0.85em, 2.4vw, 1.2em);
-    color: #b37a00;
+    gap: 3vw;
+    min-height: 0;
   }
 
-  .wetter-details span.wert {
+  .wetter-kachel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15em;
+    min-width: 0;
+  }
+
+  .kachel-label {
+    font-size: clamp(0.7em, 2.1vh, 1.3em);
+    color: #b37a00;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  .kachel-wert {
+    font-size: clamp(1.8em, 8.5vh, 4.2em);
+    font-weight: 700;
     color: #ffb000;
-    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .kachel-wert svg {
+    width: 1em;
+    height: 1em;
+    display: block;
   }
 
   /* Regen-Ja/Nein-Werte heben sich bei "Ja" farblich ab - gleiche
      Signalfarbe wie Verspätungen/Gleisänderungen auf der Zugtafel. */
-  .wetter-details span.wert.ja {
+  .kachel-wert.ja {
     color: #ff3b30;
-    text-shadow: 0 0 8px rgba(255, 59, 48, 0.8);
+    text-shadow: 0 0 10px rgba(255, 59, 48, 0.85);
   }
 
   @media (orientation: landscape) and (max-height: 600px) {
@@ -304,19 +361,37 @@
   </div>
 
   <div class="ansicht" id="ansicht-wetter">
-    <div class="wetter-textspalte">
+    <div class="wetter-full">
       <div class="wetter-kopf">
         <h2>Baden AG</h2>
       </div>
-      <div class="wetter-hauptwert">
+      <div class="wetter-haupt">
+        <div class="wetter-icon" id="wetter-icon"></div>
         <div class="wetter-temperatur" id="wetter-temp">--°</div>
       </div>
-      <div class="wetter-details">
-        <div>Gefühlt <span class="wert" id="wetter-gefuehlt">--°</span></div>
-        <div>Max. heute <span class="wert" id="wetter-max">--°</span></div>
-        <div>Min. heute <span class="wert" id="wetter-min">--°</span></div>
-        <div>Regen heute <span class="wert" id="wetter-regen-heute">--</span></div>
-        <div>Regen 30 Min. <span class="wert" id="wetter-regen-30min">--</span></div>
+      <div class="wetter-reihe">
+        <div class="wetter-kachel">
+          <div class="kachel-label">Gefühlt</div>
+          <div class="kachel-wert" id="wetter-gefuehlt">--°</div>
+        </div>
+        <div class="wetter-kachel">
+          <div class="kachel-label">Max. heute</div>
+          <div class="kachel-wert" id="wetter-max">--°</div>
+        </div>
+        <div class="wetter-kachel">
+          <div class="kachel-label">Min. heute</div>
+          <div class="kachel-wert" id="wetter-min">--°</div>
+        </div>
+      </div>
+      <div class="wetter-reihe">
+        <div class="wetter-kachel">
+          <div class="kachel-label">Regen 30 Min.</div>
+          <div class="kachel-wert" id="wetter-regen-30min">--</div>
+        </div>
+        <div class="wetter-kachel">
+          <div class="kachel-label">Regen heute</div>
+          <div class="kachel-wert" id="wetter-regen-heute">--</div>
+        </div>
       </div>
     </div>
   </div>
@@ -602,11 +677,107 @@
   const WETTER_BREITENGRAD = 47.476;
   const WETTER_LAENGENGRAD = 8.309;
 
-  // Setzt einen Ja/Nein-Regenwert und hebt "Ja" farblich hervor (gleiche
+  // Liefert ein einfarbiges SVG-Symbol (passend zum Amber-LED-Look) für den
+  // WMO-Wettercode, den Open-Meteo zurückgibt - gruppiert in sechs einfache
+  // Kategorien statt für jeden einzelnen Code ein eigenes Icon zu haben.
+  // Gemeinsamer SVG-Rahmen für alle Icons auf der Wetteransicht - einfarbig
+  // (currentColor), damit sie sich wie der Rest der Anzeige einfärben lassen.
+  const SVG_START = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
+  const SVG_ENDE = '</svg>';
+
+  function wetterIconSvg(code) {
+    const KLAR = [0, 1];
+    const NEBEL = [45, 48];
+    const GEWITTER = [95, 96, 99];
+    const SCHNEE = [71, 73, 75, 77, 85, 86];
+    const REGEN = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
+
+    const start = SVG_START;
+    const ende = SVG_ENDE;
+    const wolke = '<path d="M7 17h10a3.5 3.5 0 0 0 0-7 4.5 4.5 0 0 0-8.6-1.6A3.5 3.5 0 0 0 7 17z"/>';
+
+    if (KLAR.includes(code)) {
+      return start +
+        '<circle cx="12" cy="12" r="4"/>' +
+        '<line x1="12" y1="2" x2="12" y2="5"/>' +
+        '<line x1="12" y1="19" x2="12" y2="22"/>' +
+        '<line x1="2" y1="12" x2="5" y2="12"/>' +
+        '<line x1="19" y1="12" x2="22" y2="12"/>' +
+        '<line x1="4.2" y1="4.2" x2="6.3" y2="6.3"/>' +
+        '<line x1="17.7" y1="17.7" x2="19.8" y2="19.8"/>' +
+        '<line x1="4.2" y1="19.8" x2="6.3" y2="17.7"/>' +
+        '<line x1="17.7" y1="6.3" x2="19.8" y2="4.2"/>' +
+        ende;
+    }
+    if (NEBEL.includes(code)) {
+      return start +
+        '<line x1="4" y1="8" x2="20" y2="8"/>' +
+        '<line x1="4" y1="12" x2="20" y2="12"/>' +
+        '<line x1="4" y1="16" x2="20" y2="16"/>' +
+        ende;
+    }
+    if (GEWITTER.includes(code)) {
+      return start + wolke +
+        '<path d="M13 13l-2.5 4.5h2.5l-1.5 3.5 4-5.5h-2.5l2-2.5z" fill="currentColor" stroke="none"/>' +
+        ende;
+    }
+    if (SCHNEE.includes(code)) {
+      return start + wolke +
+        '<line x1="8" y1="19" x2="8" y2="21"/>' +
+        '<line x1="12" y1="19" x2="12" y2="22"/>' +
+        '<line x1="16" y1="19" x2="16" y2="21"/>' +
+        ende;
+    }
+    if (REGEN.includes(code)) {
+      return start + wolke +
+        '<line x1="9" y1="19" x2="8" y2="22"/>' +
+        '<line x1="13" y1="19" x2="12" y2="22"/>' +
+        '<line x1="17" y1="19" x2="16" y2="22"/>' +
+        ende;
+    }
+    // Default: bewölkt (deckt u.a. die Codes 2 und 3 ab)
+    return start + wolke + ende;
+  }
+
+  // Offener Regenschirm mit Regentropfen (regnet) bzw. geschlossener
+  // Regenschirm (regnet nicht) - als Symbol statt Ja/Nein-Text.
+  function regenschirmSvg(offen) {
+    if (offen) {
+      // Offen: schräg fallende Regentropfen oberhalb der Kuppel, darunter
+      // die Kuppel mit Rippen/Zacken am Rand, Stock und Haken-Griff.
+      return SVG_START +
+        '<line x1="6.5" y1="0.3" x2="7.9" y2="2.9"/>' +
+        '<line x1="11.3" y1="0" x2="12.7" y2="2.6"/>' +
+        '<line x1="16.1" y1="0.3" x2="17.5" y2="2.9"/>' +
+        '<path d="M4 13a8 8 0 0 1 16 0"/>' +
+        '<line x1="4" y1="13" x2="4" y2="14"/>' +
+        '<line x1="8" y1="13" x2="8" y2="14.4"/>' +
+        '<line x1="12" y1="13" x2="12" y2="14.8"/>' +
+        '<line x1="16" y1="13" x2="16" y2="14.4"/>' +
+        '<line x1="20" y1="13" x2="20" y2="14"/>' +
+        '<line x1="12" y1="13" x2="12" y2="20"/>' +
+        '<path d="M12 20a2 2 0 1 0 2 2"/>' +
+        SVG_ENDE;
+    }
+    // Geschlossen: Haken-Griff oben, darunter das lange, spitz zulaufende,
+    // zusammengerollte Tuch mit erkennbaren Falt-Linien und der kleinen
+    // Spitze ganz unten - wie ein zusammengeklappter Schirm, der am Griff
+    // hängt.
+    return SVG_START +
+      '<path d="M12 2.2a2 2 0 1 0 -2 2"/>' +
+      '<line x1="12" y1="2.2" x2="12" y2="6"/>' +
+      '<path d="M9.3 6 L14.7 6 L12 21.5 Z"/>' +
+      '<line x1="10.8" y1="6.3" x2="11.6" y2="19.2"/>' +
+      '<line x1="13.2" y1="6.3" x2="12.4" y2="19.2"/>' +
+      '<line x1="12" y1="21.5" x2="12" y2="23"/>' +
+      SVG_ENDE;
+  }
+
+  // Setzt das Regenschirm-Symbol und hebt "regnet" farblich hervor (gleiche
   // Signalfarbe wie Verspätungen/Gleisänderungen).
   function setRegenJaNein(elementId, istRegen) {
     const el = document.getElementById(elementId);
-    el.textContent = istRegen ? "Ja" : "Nein";
+    el.innerHTML = regenschirmSvg(istRegen);
     el.classList.toggle("ja", istRegen);
   }
 
@@ -629,7 +800,7 @@
 
   function aktualisiereWetter() {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${WETTER_BREITENGRAD}&longitude=${WETTER_LAENGENGRAD}` +
-      `&current=temperature_2m,apparent_temperature` +
+      `&current=temperature_2m,apparent_temperature,weathercode` +
       `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum` +
       `&minutely_15=precipitation` +
       `&timezone=Europe%2FZurich`;
@@ -639,6 +810,7 @@
       .then(data => {
         const c = data.current;
         document.getElementById("wetter-temp").textContent = Math.round(c.temperature_2m) + "°";
+        document.getElementById("wetter-icon").innerHTML = wetterIconSvg(c.weathercode);
         document.getElementById("wetter-gefuehlt").textContent = Math.round(c.apparent_temperature) + "°";
 
         const d = data.daily;
@@ -674,7 +846,7 @@
   setInterval(aktualisiereHervorhebung, 60000); // Verbindungssuche: seltener, schont die API
   setInterval(aktualisiereUhr, 1000);
   setInterval(aktualisiereWetter, 10 * 60000);  // Wetter ändert sich langsam: alle 10 Minuten reicht
-  setInterval(ansichtWechseln, 10000);          // Umschaltung zwischen den Ansichten (je 10s pro Ansicht)
+  setInterval(ansichtWechseln, 7000);           // Umschaltung zwischen den Ansichten (je 7s pro Ansicht)
 
   // Lädt die Seite regelmässig komplett neu - so holt sich das Handy von
   // selbst jede neu hochgeladene Version (z.B. via GitHub Pages), ohne dass
