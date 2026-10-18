@@ -242,12 +242,6 @@
     font-weight: 700;
   }
 
-  .wetter-beschreibung {
-    font-size: clamp(1em, 3vw, 1.6em);
-    color: #ffb000;
-    text-transform: uppercase;
-  }
-
   .wetter-details {
     display: flex;
     gap: 32px;
@@ -261,110 +255,13 @@
     font-weight: 600;
   }
 
-  .radar-box {
-    border: 1px solid #3a2600;
-    padding: 10px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
+  /* Regen-Ja/Nein-Werte heben sich bei "Ja" farblich ab - gleiche
+     Signalfarbe wie Verspätungen/Gleisänderungen auf der Zugtafel. */
+  .wetter-details span.wert.ja {
+    color: #ff3b30;
+    text-shadow: 0 0 8px rgba(255, 59, 48, 0.8);
   }
 
-  .radar-box .radar-titel {
-    font-size: 0.75em;
-    color: #b37a00;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    letter-spacing: 2px;
-  }
-
-  .regen-leiste {
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    height: 140px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #3a2600;
-  }
-
-  .regen-balken-spalte {
-    flex: 1;
-    height: 100%;
-    display: flex;
-    align-items: flex-end;
-  }
-
-  .regen-balken {
-    width: 100%;
-    min-height: 3px;
-    background: linear-gradient(to top, #7a5400, #ffb000);
-    box-shadow: 0 0 6px rgba(255, 176, 0, 0.3);
-  }
-
-  .regen-balken.kein-regen {
-    background: #241a05;
-    box-shadow: none;
-  }
-
-  .regen-temperaturen {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 4px;
-  }
-
-  .regen-temperaturen div {
-    flex: 1;
-    text-align: center;
-    font-size: 0.65em;
-    font-weight: 700;
-    color: #ffb000;
-  }
-
-  .regen-zeiten {
-    display: flex;
-    gap: 6px;
-    margin-top: 6px;
-  }
-
-  .regen-zeiten div {
-    flex: 1;
-    text-align: center;
-    font-size: 0.55em;
-    color: #b37a00;
-  }
-
-  .regen-mengen {
-    display: flex;
-    gap: 6px;
-    margin-top: 2px;
-  }
-
-  .regen-mengen div {
-    flex: 1;
-    text-align: center;
-    font-size: 0.5em;
-    color: #7a5400;
-  }
-
-  @media (orientation: landscape) and (max-height: 600px) {
-    #ansicht-wetter.aktiv {
-      flex-direction: row;
-      gap: 40px;
-    }
-
-    .wetter-textspalte {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      justify-content: flex-start;
-    }
-
-    .radar-box {
-      flex: 1.3;
-    }
-  }
   @media (orientation: landscape) and (max-height: 600px) {
     body {
       padding-top: 14px;
@@ -413,20 +310,14 @@
       </div>
       <div class="wetter-hauptwert">
         <div class="wetter-temperatur" id="wetter-temp">--°</div>
-        <div class="wetter-beschreibung" id="wetter-beschreibung">Lädt...</div>
       </div>
       <div class="wetter-details">
         <div>Gefühlt <span class="wert" id="wetter-gefuehlt">--°</span></div>
-        <div>Wind <span class="wert" id="wetter-wind">-- km/h</span></div>
-        <div>Regen (1h) <span class="wert" id="wetter-regen">--%</span></div>
+        <div>Max. heute <span class="wert" id="wetter-max">--°</span></div>
+        <div>Min. heute <span class="wert" id="wetter-min">--°</span></div>
+        <div>Regen heute <span class="wert" id="wetter-regen-heute">--</span></div>
+        <div>Regen 30 Min. <span class="wert" id="wetter-regen-30min">--</span></div>
       </div>
-    </div>
-    <div class="radar-box">
-      <div class="radar-titel">Regen &amp; Temperatur &middot; nächste 2 Stunden</div>
-      <div class="regen-temperaturen" id="regen-temperaturen"></div>
-      <div class="regen-leiste" id="regen-leiste"></div>
-      <div class="regen-zeiten" id="regen-zeiten"></div>
-      <div class="regen-mengen" id="regen-mengen"></div>
     </div>
   </div>
 
@@ -711,27 +602,36 @@
   const WETTER_BREITENGRAD = 47.476;
   const WETTER_LAENGENGRAD = 8.309;
 
-  // Kurze deutsche Beschreibung zum WMO-Wettercode, den Open-Meteo liefert.
-  function wettercodeText(code) {
-    const zuordnung = {
-      0: "Klar", 1: "Meist klar", 2: "Teilweise bewölkt", 3: "Bedeckt",
-      45: "Nebel", 48: "Nebel (Reif)",
-      51: "Leichter Sprühregen", 53: "Sprühregen", 55: "Starker Sprühregen",
-      61: "Leichter Regen", 63: "Regen", 65: "Starker Regen",
-      66: "Gefrierender Regen", 67: "Starker gefrierender Regen",
-      71: "Leichter Schneefall", 73: "Schneefall", 75: "Starker Schneefall",
-      77: "Schneegriesel",
-      80: "Leichte Schauer", 81: "Schauer", 82: "Starke Schauer",
-      85: "Leichte Schneeschauer", 86: "Starke Schneeschauer",
-      95: "Gewitter", 96: "Gewitter mit Hagel", 99: "Starkes Gewitter mit Hagel"
-    };
-    return zuordnung[code] || "–";
+  // Setzt einen Ja/Nein-Regenwert und hebt "Ja" farblich hervor (gleiche
+  // Signalfarbe wie Verspätungen/Gleisänderungen).
+  function setRegenJaNein(elementId, istRegen) {
+    const el = document.getElementById(elementId);
+    el.textContent = istRegen ? "Ja" : "Nein";
+    el.classList.toggle("ja", istRegen);
+  }
+
+  // Prüft anhand der 15-Minuten-Niederschlagswerte, ob es in den nächsten
+  // 30 Minuten (= den naechsten zwei 15-Minuten-Schritten ab "jetzt") regnet.
+  function aktualisiereRegen30Min(minutlich) {
+    if (!minutlich || !minutlich.time) {
+      setRegenJaNein("wetter-regen-30min", false);
+      return;
+    }
+
+    const jetzt = new Date();
+    let startIndex = minutlich.time.findIndex(t => new Date(t) >= jetzt);
+    if (startIndex === -1) startIndex = 0;
+
+    const naechsteWerte = minutlich.precipitation.slice(startIndex, startIndex + 2);
+    const regenBald = naechsteWerte.some(mm => mm > 0);
+    setRegenJaNein("wetter-regen-30min", regenBald);
   }
 
   function aktualisiereWetter() {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${WETTER_BREITENGRAD}&longitude=${WETTER_LAENGENGRAD}` +
-      `&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m,precipitation_probability` +
-      `&minutely_15=precipitation,temperature_2m` +
+      `&current=temperature_2m,apparent_temperature` +
+      `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum` +
+      `&minutely_15=precipitation` +
       `&timezone=Europe%2FZurich`;
 
     fetch(url)
@@ -739,70 +639,18 @@
       .then(data => {
         const c = data.current;
         document.getElementById("wetter-temp").textContent = Math.round(c.temperature_2m) + "°";
-        document.getElementById("wetter-beschreibung").textContent = wettercodeText(c.weathercode);
         document.getElementById("wetter-gefuehlt").textContent = Math.round(c.apparent_temperature) + "°";
-        document.getElementById("wetter-wind").textContent = Math.round(c.windspeed_10m) + " km/h";
-        document.getElementById("wetter-regen").textContent =
-          (c.precipitation_probability !== undefined ? c.precipitation_probability : "--") + "%";
 
-        aktualisiereRegenvorschau(data.minutely_15);
+        const d = data.daily;
+        document.getElementById("wetter-max").textContent = Math.round(d.temperature_2m_max[0]) + "°";
+        document.getElementById("wetter-min").textContent = Math.round(d.temperature_2m_min[0]) + "°";
+        setRegenJaNein("wetter-regen-heute", d.precipitation_sum[0] > 0);
+
+        aktualisiereRegen30Min(data.minutely_15);
       })
       .catch(() => {
-        document.getElementById("wetter-beschreibung").textContent = "Wetterdaten nicht verfügbar";
+        document.getElementById("wetter-temp").textContent = "–";
       });
-  }
-
-  // Baut die 8 Balken für die nächsten 2 Stunden (15-Min-Schritte) - startet
-  // immer bei "jetzt", nie in der Vergangenheit, da wir den passenden Index
-  // bei jedem Aufruf neu anhand der aktuellen Uhrzeit suchen.
-  function aktualisiereRegenvorschau(minutlich) {
-    if (!minutlich || !minutlich.time) return;
-
-    const jetzt = new Date();
-    let startIndex = minutlich.time.findIndex(t => new Date(t) >= jetzt);
-    if (startIndex === -1) startIndex = 0;
-
-    const ANZAHL_SCHRITTE = 8; // 8 x 15 Min. = 2 Stunden
-    const zeiten = minutlich.time.slice(startIndex, startIndex + ANZAHL_SCHRITTE);
-    const werte = minutlich.precipitation.slice(startIndex, startIndex + ANZAHL_SCHRITTE);
-    const temperaturen = minutlich.temperature_2m.slice(startIndex, startIndex + ANZAHL_SCHRITTE);
-
-    const MAX_BALKENHOEHE_MM = 3; // ab dieser Menge pro 15 Min. ist der Balken "voll"
-
-    const temperaturZeile = document.getElementById("regen-temperaturen");
-    const leiste = document.getElementById("regen-leiste");
-    const zeitenZeile = document.getElementById("regen-zeiten");
-    const mengenZeile = document.getElementById("regen-mengen");
-
-    temperaturZeile.innerHTML = "";
-    leiste.innerHTML = "";
-    zeitenZeile.innerHTML = "";
-    mengenZeile.innerHTML = "";
-
-    zeiten.forEach((zeit, i) => {
-      const mm = werte[i] || 0;
-      const hoehe = Math.min(100, (mm / MAX_BALKENHOEHE_MM) * 100);
-
-      const tempLabel = document.createElement("div");
-      tempLabel.textContent = Math.round(temperaturen[i]) + "°";
-      temperaturZeile.appendChild(tempLabel);
-
-      const spalte = document.createElement("div");
-      spalte.className = "regen-balken-spalte";
-      const balken = document.createElement("div");
-      balken.className = "regen-balken" + (mm <= 0 ? " kein-regen" : "");
-      balken.style.height = Math.max(3, hoehe) + "%";
-      spalte.appendChild(balken);
-      leiste.appendChild(spalte);
-
-      const zeitLabel = document.createElement("div");
-      zeitLabel.textContent = new Date(zeit).toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
-      zeitenZeile.appendChild(zeitLabel);
-
-      const mengeLabel = document.createElement("div");
-      mengeLabel.textContent = mm > 0 ? mm.toFixed(1) : "–";
-      mengenZeile.appendChild(mengeLabel);
-    });
   }
 
   // --- Ansichten-Umschaltung: rotiert alle 10 Sekunden zwischen Zugtafel
@@ -827,6 +675,11 @@
   setInterval(aktualisiereUhr, 1000);
   setInterval(aktualisiereWetter, 10 * 60000);  // Wetter ändert sich langsam: alle 10 Minuten reicht
   setInterval(ansichtWechseln, 10000);          // Umschaltung zwischen den Ansichten (je 10s pro Ansicht)
+
+  // Lädt die Seite regelmässig komplett neu - so holt sich das Handy von
+  // selbst jede neu hochgeladene Version (z.B. via GitHub Pages), ohne dass
+  // man je wieder manuell am Gerät etwas tun muss.
+  setInterval(() => location.reload(), 45 * 60000); // alle 45 Minuten
 </script>
 
 
